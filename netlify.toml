@@ -1,0 +1,21 @@
+# Netlify configuration for the ViaLearn workshop quiz.
+# Static site (no build step) with serverless functions in netlify/functions.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  # Netlify Functions v2 (ESM). Blobs storage is available automatically.
+  node_bundler = "esbuild"
+
+# Nice URLs: /pre and /post resolve to the quiz pages.
+[[redirects]]
+  from = "/pre"
+  to = "/pre.html"
+  status = 200
+
+[[redirects]]
+  from = "/post"
+  to = "/post.html"
+  status = 200

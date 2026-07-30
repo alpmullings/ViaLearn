@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Facilitator report | ViaLearn</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/assets/css/brand.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand-lockup" href="/">
+        <span class="brand-mark">V</span>
+        <span class="brand-name">ViaLearn<small>by ViaVeri</small></span>
+      </a>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">Facilitator only</p>
+      <h1>Workshop results</h1>
+      <p class="lede">Aggregate, anonymous results paired by matching code. Enter your facilitator
+        key to load the report.</p>
+    </section>
+
+    <section class="card">
+      <label class="code-label" for="key">Facilitator key</label>
+      <input id="key" type="password" class="text-input" style="max-width:320px" autocomplete="off" placeholder="Enter key" />
+      <div class="submit-row" style="margin-top:16px">
+        <button id="load" class="btn btn-primary">Load report</button>
+        <p class="field-error" id="err"></p>
+      </div>
+    </section>
+
+    <div id="report"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page" style="padding-bottom:0">
+      <p>© <span id="year"></span> ViaVeri · ViaLearn workshop tools</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    const keyInput = document.getElementById("key");
+    const err = document.getElementById("err");
+    const report = document.getElementById("report");
+    const CONF = { C1: "Understands how AI works", C2: "Can spot & check wrong answers", C3: "Knows what's safe to share", C4: "Knows when it's appropriate" };
+
+    async function load() {
+      err.textContent = "";
+      report.innerHTML = "";
+      const key = keyInput.value.trim();
+      if (!key) { err.textContent = "Enter your facilitator key."; return; }
+      try {
+        const res = await fetch("/.netlify/functions/results?key=" + encodeURIComponent(key));
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Could not load report.");
+        render(data);
+      } catch (e) {
+        err.textContent = e.message;
+      }
+    }
+
+    function tile(label, value, sub) {
+      return `<div class="score-tile"><span class="score-label">${label}</span>
+        <span class="score-value">${value ?? "—"}</span><span class="score-max">${sub || ""}</span></div>`;
+    }
+
+    function render(d) {
+      const k = d.knowledge;
+      let html = `<section class="card">
+        <h2>Knowledge score <span class="muted small">(/${k.outOf})</span></h2>
+        <div class="score-grid">
+          ${tile("Mean pre", k.meanPre)}
+          ${tile("Mean post", k.meanPost)}
+          ${tile("Avg gain", (k.meanGainPaired > 0 ? "+" : "") + (k.meanGainPaired ?? "—"), "paired")}
+        </div>
+        <p class="muted small">Responses — pre: ${d.counts.pre} · post: ${d.counts.post} · paired: ${d.counts.paired}</p>
+      </section>`;
+
+      html += `<section class="card"><h2>Confidence shift <span class="muted small">(mean Δ, 1–5)</span></h2>
+        <div class="table-scroll"><table class="shift-table"><thead><tr><th>Statement</th><th class="num">Mean Δ</th></tr></thead><tbody>`;
+      for (const id of ["C1","C2","C3","C4"]) {
+        const v = d.confidenceShift[id];
+        const cls = v > 0 ? "gain-up" : v < 0 ? "gain-down" : "";
+        html += `<tr><td>${CONF[id]}</td><td class="num ${cls}">${v > 0 ? "+" : ""}${v ?? "—"}</td></tr>`;
+      }
+      html += `</tbody></table></div></section>`;
+
+      const f = d.feedback;
+      html += `<section class="card"><h2>Feedback <span class="muted small">(post-course, not scored)</span></h2>
+        <div class="score-grid">
+          ${tile("Improved confidence", f.meanF1, "F1, /5")}
+          ${tile("Will change something", f.meanF2, "F2, /5")}
+        </div>
+        <p style="margin-top:16px"><strong>Would recommend:</strong>
+          Yes ${f.recommend.Yes} · Maybe ${f.recommend.Maybe} · No ${f.recommend.No}</p>`;
+      if (f.comments && f.comments.length) {
+        html += `<h3 style="font-size:16px;margin:16px 0 8px">"One thing I'll do differently"</h3><ul>`;
+        for (const c of f.comments) html += `<li>${escapeHtml(c)}</li>`;
+        html += `</ul>`;
+      }
+      html += `</section>`;
+      report.innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    document.getElementById("load").addEventListener("click", load);
+    keyInput.addEventListener("keydown", (e) => { if (e.key === "Enter") load(); });
+  </script>
+</body>
+</html>

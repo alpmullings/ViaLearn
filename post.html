@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Post-course quiz | ViaLearn</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/assets/css/brand.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand-lockup" href="/">
+        <span class="brand-mark">V</span>
+        <span class="brand-name">ViaLearn<small>by ViaVeri</small></span>
+      </a>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">End of day · Post-course</p>
+      <h1>Post-course quiz</h1>
+      <p class="lede">Use the <strong>same matching code</strong> you used this morning. As soon as
+        you submit, we'll reveal your before/after — both your knowledge score and how your
+        confidence shifted across the day.</p>
+    </section>
+
+    <div id="quiz-root" data-mode="post"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page" style="padding-bottom:0">
+      <p>© <span id="year"></span> ViaVeri · ViaLearn workshop tools</p>
+    </div>
+  </footer>
+
+  <script src="/assets/js/questions.js"></script>
+  <script src="/assets/js/app.js"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
