@@ -14,12 +14,13 @@ until the post-course quiz is completed, then their before/after is revealed.
   CSS/JS in `assets/`.
 - **Scoring and storage run server-side** in Netlify Functions (`netlify/functions/`)
   so the answer key never reaches the browser and the pre-course score can't be seen early.
-- Responses are stored in **Netlify Blobs**, keyed by a **facilitator-issued workshop
-  code** (e.g. `VL-7XK4`) — no names collected. Codes are generated on the facilitator
-  page and only issued codes are accepted by the quiz.
-- Each participant is emailed a personal link (`https://site/?code=VL-7XK4`) that
-  pre-fills their code on both quizzes; the code↔email mapping lives only in the
-  facilitator's outbox, so stored responses stay anonymous.
+- Responses are stored in **Netlify Blobs**, keyed by a short **quiz code** (e.g.
+  `VL-7XK4`) — no names collected. The pre-course quiz generates the code automatically
+  and saves it in the participant's browser, so the post-course quiz pre-fills it; the
+  field stays editable for anyone switching device. Nothing is issued or validated in
+  advance, so there is no setup step before a workshop.
+- A link may carry a code (`https://site/?code=VL-7XK4`) if you'd rather assign them
+  yourself, but this is optional.
 
 | Route | Purpose |
 |-------|---------|
@@ -39,15 +40,12 @@ until the post-course quiz is completed, then their before/after is revealed.
 
 That's it. The pre/post pages need no configuration.
 
-### Facilitator page
+### Facilitator report
 
-Visit `/facilitator.html` and enter your `FACILITATOR_KEY` to:
-
-- **Generate workshop codes** (one per participant) and copy a ready-to-email list of
-  code + personal link pairs.
-- **Track completion** — which codes have taken the pre and post quiz.
-- **Load the report** — mean pre score, mean post score, average paired gain, the mean
-  confidence shift per statement, and the Section 3 feedback summary.
+Visit `/facilitator.html` and enter your `FACILITATOR_KEY` to load the report: mean pre
+score, mean post score, average paired gain, the mean confidence shift per statement, and
+the Section 3 feedback summary. The key gates the report only — participants never need
+it, and the quiz works whether or not it is set.
 
 ### Local preview
 

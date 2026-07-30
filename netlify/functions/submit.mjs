@@ -60,13 +60,7 @@ export default async (req) => {
   const mode = payload.mode === "post" ? "post" : payload.mode === "pre" ? "pre" : null;
   const code = normalizeCode(payload.code);
   if (!mode) return json(400, { error: "Missing quiz mode." });
-  if (code.length < 4) return json(400, { error: "Please enter your workshop code." });
-
-  // Only facilitator-issued codes are accepted.
-  const issued = await getStore("issued-codes").get(code, { type: "json" });
-  if (!issued) {
-    return json(403, { error: "That code isn't recognized. Please use the link (or code) from your workshop email, or ask your facilitator." });
-  }
+  if (code.length < 4) return json(400, { error: "Please enter your quiz code." });
 
   // Unanswered questions are allowed (the client warns before submitting);
   // answered ones must be known option letters. Missing answers score 0 and
