@@ -19,6 +19,9 @@
   --surface: #ffffff;           /* cards */
 
   --danger: #b23b3b;
+  --warn: #8a6116;         /* unanswered-question warnings */
+  --warn-border: #d9a93f;
+  --warn-soft: #fdf6e4;
   --gain-up: #2f8f83;
   --gain-down: #b23b3b;
 
@@ -179,6 +182,23 @@ fieldset.question { border: 0; margin: 0; padding: 18px 0; border-top: 1px solid
 .choice-card h3 { margin: 0 0 6px; font-size: 20px; }
 .choice-card p { margin: 0 0 16px; color: var(--ink-muted); font-size: 15px; }
 .choice-card .go { margin-top: auto; font-weight: 700; color: var(--brand-accent); }
+
+/* Unanswered-question warning */
+.warn-box {
+  border: 1px solid var(--warn-border); border-left-width: 4px;
+  background: var(--warn-soft); color: var(--warn);
+  padding: 16px 18px; border-radius: var(--radius-sm); margin: 22px 0;
+}
+.warn-title { margin: 0 0 8px; }
+.warn-title strong { color: var(--warn); }
+.warn-list { margin: 0; padding-left: 20px; }
+.warn-list li { margin: 4px 0; font-size: 15px; }
+.warn-link { color: var(--warn); font-weight: 700; text-decoration-color: var(--warn-border); }
+fieldset.question.unanswered {
+  border-left: 4px solid var(--warn-border);
+  padding-left: 14px; padding-right: 14px;
+  background: var(--warn-soft); border-radius: var(--radius-sm);
+}
 
 /* Info / callout */
 .callout {

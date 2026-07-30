@@ -91,7 +91,7 @@
       el("textarea", { id: "F3", name: "F3", class: "text-input", rows: "3", placeholder: "Optional" }),
     ]));
     // F4 — recommend
-    const f4 = el("fieldset", { class: "question" }, [el("legend", { class: "q-text" }, "Would you recommend this workshop to a colleague?")]);
+    const f4 = el("fieldset", { class: "question", "data-qid": "F4" }, [el("legend", { class: "q-text" }, "Would you recommend this workshop to a colleague?")]);
     ["Yes", "Maybe", "No"].forEach((opt) => {
       const id = `F4-${opt}`;
       f4.appendChild(el("label", { class: "option pill", for: id }, [
@@ -114,14 +114,14 @@
 
   // ---- Builders ---------------------------------------------------------
   function buildScale(id, text, group, labels = ["Not confident", "Very confident"]) {
-    const fs = el("fieldset", { class: "question scale-q" }, [
+    const fs = el("fieldset", { class: "question scale-q", "data-qid": id }, [
       el("legend", { class: "q-text" }, `${text}`),
     ]);
     const scale = el("div", { class: "scale" });
     for (let n = 1; n <= 5; n++) {
       const optId = `${id}-${n}`;
       scale.appendChild(el("label", { class: "scale-option", for: optId }, [
-        el("input", { type: "radio", id: optId, name: id, value: String(n), "data-group": group, required: "required" }),
+        el("input", { type: "radio", id: optId, name: id, value: String(n), "data-group": group }),
         el("span", { class: "scale-num" }, String(n)),
       ]));
     }
@@ -134,13 +134,13 @@
   }
 
   function buildChoice(q, num) {
-    const fs = el("fieldset", { class: "question choice-q" }, [
+    const fs = el("fieldset", { class: "question choice-q", "data-qid": q.id }, [
       el("legend", { class: "q-text" }, [el("span", { class: "q-num" }, `${num}.`), " ", q.text]),
     ]);
     for (const [letter, label] of Object.entries(q.options)) {
       const optId = `${q.id}-${letter}`;
       fs.appendChild(el("label", { class: "option", for: optId }, [
-        el("input", { type: "radio", id: optId, name: q.id, value: letter, required: "required" }),
+        el("input", { type: "radio", id: optId, name: q.id, value: letter }),
         el("span", { class: "option-marker" }, letter),
         el("span", { class: "option-text" }, label),
       ]));
@@ -149,6 +149,8 @@
   }
 
   // ---- Submit handling --------------------------------------------------
+  let warnedAboutMissing = false;
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearErrors();
@@ -160,18 +162,38 @@
       return;
     }
 
-    // Collect confidence + knowledge answers.
+    // Collect answers; unanswered questions are allowed, but only after an
+    // explicit warning that names each one.
     const confidence = {};
+    const missing = [];
     for (const item of CONFIDENCE) {
       const v = form.elements[item.id]?.value;
-      if (!v) return incomplete();
-      confidence[item.id] = Number(v);
+      if (v) confidence[item.id] = Number(v);
+      else missing.push({ id: item.id, label: `Section 1 — statement ${item.id}`, text: item.text });
     }
     const answers = {};
-    for (const q of KNOWLEDGE) {
+    KNOWLEDGE.forEach((q, i) => {
       const v = form.elements[q.id]?.value;
-      if (!v) return incomplete();
-      answers[q.id] = v;
+      if (v) answers[q.id] = v;
+      else missing.push({ id: q.id, label: `Section 2 — question ${i + 1}`, text: q.text });
+    });
+    if (MODE === "post") {
+      FEEDBACK_SCALE.forEach((item) => {
+        if (!form.elements[item.id]?.value) {
+          missing.push({ id: item.id, label: `Section 3 — statement ${item.id}`, text: item.text });
+        }
+      });
+      if (!form.elements["F4"]?.value) {
+        missing.push({ id: "F4", label: "Section 3 — F4", text: "Would you recommend this workshop to a colleague?" });
+      }
+    }
+
+    // Radio choices can only be added, never cleared, so the missing set only
+    // shrinks after a warning — one warning always covers everything unanswered.
+    if (missing.length && !warnedAboutMissing) {
+      warnedAboutMissing = true;
+      showUnansweredWarning(missing);
+      return;
     }
 
     const payload = { mode: MODE, code, confidence, answers };
@@ -205,14 +227,58 @@
     }
   });
 
-  function incomplete() {
-    showError("form-error", "Please answer every question before submitting.");
-    const firstEmpty = [...form.querySelectorAll("fieldset.question")].find((fs) => {
-      const inputs = fs.querySelectorAll("input[type=radio]");
-      return inputs.length && ![...inputs].some((i) => i.checked);
+  function showUnansweredWarning(missing) {
+    document.getElementById("unanswered-warning")?.remove();
+
+    const items = missing.map((m) => {
+      const link = el("a", { href: "#", class: "warn-link" }, m.label);
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const fs = form.querySelector(`fieldset[data-qid="${m.id}"]`);
+        fs?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      return el("li", { "data-missing-id": m.id }, [
+        link,
+        el("span", { class: "muted" }, ` — ${m.text.length > 70 ? m.text.slice(0, 70) + "…" : m.text}`),
+      ]);
     });
-    firstEmpty?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    const box = el("div", { class: "warn-box", id: "unanswered-warning", role: "alert" }, [
+      el("p", { class: "warn-title" }, [
+        el("strong", {}, `Are you sure you want to submit without answering? `),
+        `You haven't answered ${missing.length === 1 ? "this question" : `these ${missing.length} questions`}:`,
+      ]),
+      el("ul", { class: "warn-list" }, items),
+      el("p", { class: "muted small", style: "margin:8px 0 0" },
+        "Click a question above to jump to it, or press the button again to submit as-is — unanswered questions simply won't count."),
+    ]);
+
+    // Highlight the unanswered fieldsets themselves.
+    for (const m of missing) {
+      form.querySelector(`fieldset[data-qid="${m.id}"]`)?.classList.add("unanswered");
+    }
+
+    const submitRowNode = form.querySelector(".submit-row");
+    submitRowNode.parentNode.insertBefore(box, submitRowNode);
+    form.querySelector("button[type=submit]").textContent = "Submit anyway";
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
   }
+
+  // As unanswered questions get answered, clear their highlight and warning
+  // entry; if everything is answered, restore the normal submit button.
+  form.addEventListener("change", (e) => {
+    const fs = e.target.closest?.("fieldset.question.unanswered");
+    if (!fs) return;
+    fs.classList.remove("unanswered");
+    const box = document.getElementById("unanswered-warning");
+    if (!box) return;
+    box.querySelector(`li[data-missing-id="${fs.dataset.qid}"]`)?.remove();
+    if (!box.querySelector("li")) {
+      box.remove();
+      form.querySelector("button[type=submit]").textContent =
+        MODE === "pre" ? "Submit pre-course quiz" : "Submit post-course quiz";
+    }
+  });
 
   // ---- Result rendering -------------------------------------------------
   function renderResult(data) {
@@ -254,12 +320,13 @@
       const rows = CONFIDENCE.map((item) => {
         const before = data.pre.confidence?.[item.id];
         const after = data.post.confidence?.[item.id];
-        const diff = (after ?? 0) - (before ?? 0);
+        const diff = before != null && after != null ? after - before : null;
         return el("tr", {}, [
           el("td", {}, item.text),
           el("td", { class: "num" }, String(before ?? "—")),
           el("td", { class: "num" }, String(after ?? "—")),
-          el("td", { class: `num ${diff > 0 ? "gain-up" : diff < 0 ? "gain-down" : ""}` }, `${diff > 0 ? "+" : ""}${diff}`),
+          el("td", { class: `num ${diff > 0 ? "gain-up" : diff < 0 ? "gain-down" : ""}` },
+            diff === null ? "—" : `${diff > 0 ? "+" : ""}${diff}`),
         ]);
       });
       card.appendChild(el("h3", {}, "Your confidence, before and after"));

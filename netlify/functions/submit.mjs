@@ -68,19 +68,20 @@ export default async (req) => {
     return json(403, { error: "That code isn't recognized. Please use the link (or code) from your workshop email, or ask your facilitator." });
   }
 
-  // Validate answers are all present and are known option letters.
+  // Unanswered questions are allowed (the client warns before submitting);
+  // answered ones must be known option letters. Missing answers score 0 and
+  // skipped confidence items are stored as null.
   const answers = {};
   for (const id of Object.keys(ANSWER_KEY)) {
-    const v = String(payload.answers?.[id] || "").toLowerCase();
+    const raw = payload.answers?.[id];
+    if (raw == null || raw === "") continue;
+    const v = String(raw).toLowerCase();
     if (!["a", "b", "c", "d"].includes(v)) {
-      return json(400, { error: "Please answer every knowledge question." });
+      return json(400, { error: "Invalid answer value." });
     }
     answers[id] = v;
   }
   const confidence = cleanConfidence(payload.confidence);
-  if (Object.values(confidence).some((v) => v === null)) {
-    return json(400, { error: "Please answer every confidence question." });
-  }
 
   const store = getStore("quiz-responses");
   const now = new Date().toISOString();
