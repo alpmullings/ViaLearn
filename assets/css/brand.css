@@ -1,36 +1,41 @@
 /* =========================================================================
    ViaVeri / ViaLearn brand tokens
    -------------------------------------------------------------------------
-   PLACEHOLDER VALUES — swap these for the real ViaVeri brand. Everything
-   below the tokens block references these variables, so changing the brand
-   is a single-block edit. Provide: primary + accent hex, text/background,
-   and the brand font (and I'll wire the @font-face / Google Fonts link).
+   Palette taken from viaveri.co: vivid violet/purple ground, blue→cyan
+   gradient display type, mint-green micro-accents. Header carries the
+   purple; the page itself stays light so a 10-minute form remains easy to
+   read. No logo mark by request — text lockup only.
    ========================================================================= */
 :root {
-  --brand-primary: #14324b;      /* deep navy — headings, primary buttons */
-  --brand-primary-600: #1d4a6e;  /* hover */
-  --brand-accent: #2f8f83;       /* teal — highlights, focus, gains */
-  --brand-accent-soft: #e6f2f0;
+  --brand-primary: #5b21b6;      /* deep violet — headings, primary buttons */
+  --brand-primary-600: #6d28d9;  /* hover */
+  --brand-accent: #7c3aed;       /* violet — highlights, focus, selections */
+  --brand-accent-soft: #f1ebfd;
 
-  --ink: #1a2430;                /* body text */
-  --ink-muted: #5b6875;          /* secondary text */
-  --line: #dfe5ea;              /* borders */
-  --bg: #f4f6f8;                /* page background */
+  --grad-a: #4f46e5;             /* blue→cyan signature gradient (display type) */
+  --grad-b: #0891b2;
+  --header-grad-a: #3b1584;      /* header purple sweep */
+  --header-grad-b: #7c3aed;
+
+  --ink: #231a3c;                /* body text, purple-biased near-black */
+  --ink-muted: #675e85;          /* secondary text */
+  --line: #e4def2;              /* borders */
+  --bg: #f7f5fc;                /* page background, lavender-tinted */
   --surface: #ffffff;           /* cards */
 
   --danger: #b23b3b;
   --warn: #8a6116;         /* unanswered-question warnings */
   --warn-border: #d9a93f;
   --warn-soft: #fdf6e4;
-  --gain-up: #2f8f83;
+  --gain-up: #0e9f6e;      /* ViaVeri mint green */
   --gain-down: #b23b3b;
 
   --radius: 12px;
   --radius-sm: 8px;
-  --shadow: 0 1px 2px rgba(20, 50, 75, 0.06), 0 8px 24px rgba(20, 50, 75, 0.06);
+  --shadow: 0 1px 2px rgba(76, 29, 149, 0.06), 0 8px 24px rgba(76, 29, 149, 0.08);
   --maxw: 780px;
 
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, Helvetica, Arial, sans-serif;
   --font-head: var(--font-sans);
 }
 
@@ -53,7 +58,7 @@ img { max-width: 100%; height: auto; }
 /* ---- Layout ------------------------------------------------------------- */
 .page { max-width: var(--maxw); margin: 0 auto; padding: 0 20px 72px; }
 .site-header {
-  background: var(--brand-primary);
+  background: linear-gradient(120deg, var(--header-grad-a), var(--header-grad-b));
   color: #fff;
   padding: 18px 0;
 }
@@ -62,12 +67,6 @@ img { max-width: 100%; height: auto; }
   display: flex; align-items: center; gap: 14px;
 }
 .brand-lockup { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
-.brand-mark {
-  width: 38px; height: 38px; border-radius: 9px;
-  display: grid; place-items: center;
-  background: var(--brand-accent); color: #fff;
-  font-weight: 800; font-size: 20px; letter-spacing: -0.5px;
-}
 .brand-name { font-weight: 700; font-size: 19px; letter-spacing: -0.2px; }
 .brand-name small { display: block; font-weight: 400; font-size: 12px; opacity: 0.8; letter-spacing: 0.3px; }
 
@@ -77,6 +76,15 @@ img { max-width: 100%; height: auto; }
   font-weight: 700; color: var(--brand-accent); margin: 0 0 10px;
 }
 .hero h1 { font-size: clamp(26px, 4.5vw, 38px); margin: 0 0 12px; }
+/* ViaVeri's signature blue→cyan gradient on display headings. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero h1 {
+    background: linear-gradient(90deg, var(--grad-a), var(--grad-b));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
 .hero p.lede { font-size: 18px; color: var(--ink-muted); margin: 0 0 8px; max-width: 60ch; }
 
 /* ---- Cards & questions -------------------------------------------------- */
@@ -159,7 +167,7 @@ fieldset.question { border: 0; margin: 0; padding: 18px 0; border-top: 1px solid
   text-decoration: none; transition: background .15s, transform .05s;
 }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--brand-primary); color: #fff; }
+.btn-primary { background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent)); color: #fff; }
 .btn-primary:hover { background: var(--brand-primary-600); }
 .btn-primary:disabled { opacity: .6; cursor: default; }
 .btn-outline { background: transparent; color: var(--brand-primary); border-color: var(--brand-primary); }

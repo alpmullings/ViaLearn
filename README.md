@@ -59,8 +59,9 @@ npx netlify dev
 `netlify dev` serves the static pages and the functions together (plain `open index.html`
 won't run the serverless functions). Set `FACILITATOR_KEY` in a `.env` file for local use.
 
-### Re-skinning / branding
+### Branding
 
-All brand values (colors, fonts, radius) are CSS variables at the top of
-`assets/css/brand.css`. The logo is a text lockup in each page's `<header>` — swap the
-`.brand-mark` / `.brand-name` markup for a real logo image when available.
+All brand values are CSS variables at the top of `assets/css/brand.css`, matched to
+viaveri.co: violet/purple palette, purple gradient header, blue→cyan gradient display
+headings, mint-green for positive deltas. The header is a text-only lockup by design —
+no logo mark.
