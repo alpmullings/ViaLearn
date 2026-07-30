@@ -27,10 +27,10 @@
     </section>
 
     <div class="callout">
-      <p style="margin:0"><strong>Before you start:</strong> your workshop email contains your
-      personal code (like VL-7XK4) — opening this page from that email fills it in for you. The code
-      lets us pair your two quizzes without collecting your name. Your pre-course results stay hidden
-      until you finish the post-course quiz this afternoon — that's when your before/after is revealed.</p>
+      <p style="margin:0"><strong>Before you start:</strong> the pre-course quiz gives you a short
+      code and remembers it in this browser, so the afternoon quiz fills it in for you — it's how we
+      pair your two quizzes without collecting your name. Your pre-course results stay hidden until
+      you finish the post-course quiz this afternoon — that's when your before/after is revealed.</p>
     </div>
 
     <div class="choice-cards">
@@ -60,7 +60,7 @@
   </footer>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
-    // If the emailed link carried a code (/?code=VL-7XK4), pass it through to
+    // If this page was opened with a code (/?code=VL-7XK4), pass it through to
     // both quiz pages so the field arrives pre-filled.
     const code = new URLSearchParams(location.search).get("code");
     if (code) {

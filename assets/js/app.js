@@ -29,16 +29,38 @@
   // ---- Build the form ---------------------------------------------------
   const form = el("form", { class: "quiz-form", novalidate: "novalidate" });
 
-  // Workshop code — issued by the facilitator and emailed to each participant.
-  // Links can carry it as ?code=VL-7XK4, in which case we pre-fill the field.
+  // Quiz code — the only thing linking a participant's morning and afternoon
+  // quizzes. Nothing is issued or validated: we make one up on the pre-quiz,
+  // remember it in this browser, and pre-fill it in the afternoon. A ?code=
+  // link wins if present, and the field stays editable for anyone who
+  // switches device and types the code they noted down.
+  const STORE_KEY = "vialearn:quiz-code";
+  const readSaved = () => { try { return localStorage.getItem(STORE_KEY) || ""; } catch { return ""; } };
+  const saveCode = (v) => { try { localStorage.setItem(STORE_KEY, v); } catch { /* private mode */ } };
+  const newCode = () => {
+    const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no lookalikes
+    let s = "";
+    for (let i = 0; i < 4; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
+    return "VL-" + s;
+  };
+
   const linkedCode = new URLSearchParams(location.search).get("code") || "";
+  const initialCode = linkedCode || readSaved() || (MODE === "pre" ? newCode() : "");
+  if (MODE === "pre" && initialCode) saveCode(initialCode);
+
   const codeSection = el("section", { class: "card" }, [
-    el("h2", {}, "Your workshop code"),
-    el("p", { class: "muted" }, [
-      "Your code was emailed to you before the workshop — if you opened this page from that email, it's already filled in below. Use the ",
-      el("strong", {}, "same code"),
-      " on both the pre- and post-course quiz. It lets us pair your two quizzes without collecting your name.",
-    ]),
+    el("h2", {}, "Your quiz code"),
+    el("p", { class: "muted" }, MODE === "pre"
+      ? [
+          "This code is how we match your two quizzes without collecting your name. We've created one for you and saved it in this browser, so the post-course quiz will fill it in automatically. ",
+          el("strong", {}, "Jot it down anyway"),
+          " in case you use a different device this afternoon.",
+        ]
+      : [
+          "Your code should already be filled in below from this morning. If it's blank — or you're on a different device — type the ",
+          el("strong", {}, "same code"),
+          " you used for the pre-course quiz.",
+        ]),
     el("label", { class: "code-label", for: "matching-code" }, "My code"),
     el("input", {
       id: "matching-code",
@@ -49,12 +71,17 @@
       autocapitalize: "characters",
       spellcheck: "false",
       placeholder: "e.g. VL-7XK4",
-      required: "required",
-      value: linkedCode,
+      value: initialCode,
     }),
     el("p", { class: "field-error", id: "code-error", "aria-live": "polite" }, ""),
   ]);
   form.appendChild(codeSection);
+
+  // Keep the browser's copy in step if they edit it by hand.
+  codeSection.querySelector("#matching-code").addEventListener("change", (e) => {
+    const v = e.target.value.trim();
+    if (v) saveCode(v);
+  });
 
   // Section 1 — Confidence
   const confSection = el("section", { class: "card" }, [
@@ -157,7 +184,7 @@
 
     const code = normalizeCode(form.matchingCode.value);
     if (!code || code.length < 4) {
-      showError("code-error", "Please enter the workshop code from your email (e.g. VL-7XK4).");
+      showError("code-error", "Please enter your quiz code (e.g. VL-7XK4).");
       form.matchingCode.focus();
       return;
     }
@@ -292,8 +319,8 @@
           el("strong", {}, "locked on purpose"),
           ". They'll be revealed at the end of the day, once you complete the post-course quiz using the same code — that's how we show you what changed.",
         ]),
-        el("div", { class: "code-echo" }, [el("span", { class: "muted" }, "Your workshop code"), el("strong", {}, data.code || "")]),
-        el("p", { class: "muted small" }, "Use the same email link (or code) this afternoon. Enjoy the workshop!"),
+        el("div", { class: "code-echo" }, [el("span", { class: "muted" }, "Your quiz code"), el("strong", {}, data.code || "")]),
+        el("p", { class: "muted small" }, "We've saved this code in your browser, so this afternoon's quiz will fill it in for you. Write it down as a backup. Enjoy the workshop!"),
         el("div", { style: "margin-top:14px" }, [
           el("a", { class: "btn btn-outline", href: "/post?code=" + encodeURIComponent(data.code || "") },
             "This afternoon: take the post-course quiz →"),
