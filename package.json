@@ -1,0 +1,10 @@
+{
+  "name": "vialearn-workshop-quiz",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pre/post-course quiz for the AI Usage, Ethics, and Safety workshop.",
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

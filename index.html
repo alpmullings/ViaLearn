@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Workshop Quiz — AI Usage, Ethics & Safety | ViaLearn</title>
+  <meta name="description" content="Pre- and post-course quiz for the AI Usage, Ethics, and Safety workshop." />
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/assets/css/brand.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand-lockup" href="/">
+        <span class="brand-name">ViaLearn<small>by ViaVeri</small></span>
+      </a>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">One-day workshop</p>
+      <h1>AI Usage, Ethics &amp; Safety in the Public Service</h1>
+      <p class="lede">We run the same short quiz twice — once this morning, once at the end of the
+        day — so you can see for yourself what changes. It takes under 10 minutes and there are no
+        wrong answers that count against you.</p>
+    </section>
+
+    <div class="callout">
+      <p style="margin:0"><strong>Before you start:</strong> your workshop email contains your
+      personal code (like VL-7XK4) — opening this page from that email fills it in for you. The code
+      lets us pair your two quizzes without collecting your name. Your pre-course results stay hidden
+      until you finish the post-course quiz this afternoon — that's when your before/after is revealed.</p>
+    </div>
+
+    <div class="choice-cards">
+      <a href="/pre">
+        <div class="choice-card">
+          <span class="tag">Start of day</span>
+          <h3>Pre-course quiz</h3>
+          <p>Take this first, before the workshop begins. Your results are saved and locked.</p>
+          <span class="go">Begin pre-course quiz →</span>
+        </div>
+      </a>
+      <a href="/post">
+        <div class="choice-card">
+          <span class="tag">End of day</span>
+          <h3>Post-course quiz</h3>
+          <p>Take this at the end, using the same matching code. You'll see your before/after right away.</p>
+          <span class="go">Begin post-course quiz →</span>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page" style="padding-bottom:0">
+      <p>© <span id="year"></span> ViaVeri · ViaLearn workshop tools</p>
+    </div>
+  </footer>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    // If the emailed link carried a code (/?code=VL-7XK4), pass it through to
+    // both quiz pages so the field arrives pre-filled.
+    const code = new URLSearchParams(location.search).get("code");
+    if (code) {
+      document.querySelectorAll('.choice-cards a').forEach((a) => {
+        const url = new URL(a.getAttribute("href"), location.origin);
+        url.searchParams.set("code", code);
+        a.setAttribute("href", url.pathname + url.search);
+      });
+    }
+  </script>
+</body>
+</html>
