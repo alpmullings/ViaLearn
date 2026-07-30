@@ -29,15 +29,15 @@
   // ---- Build the form ---------------------------------------------------
   const form = el("form", { class: "quiz-form", novalidate: "novalidate" });
 
-  // Matching code
+  // Workshop code — issued by the facilitator and emailed to each participant.
+  // Links can carry it as ?code=VL-7XK4, in which case we pre-fill the field.
+  const linkedCode = new URLSearchParams(location.search).get("code") || "";
   const codeSection = el("section", { class: "card" }, [
-    el("h2", {}, "Your private matching code"),
+    el("h2", {}, "Your workshop code"),
     el("p", { class: "muted" }, [
-      "So we can compare your two sheets without collecting your name, use a code only you can reproduce: ",
-      el("strong", {}, "the last 2 letters of your mother's first name + the day of the month you were born (2 digits) + the last 2 letters of your first street."),
-      " Use the ",
+      "Your code was emailed to you before the workshop — if you opened this page from that email, it's already filled in below. Use the ",
       el("strong", {}, "same code"),
-      " on both the pre- and post-course quiz. (Example: NA + 07 + ON = NA07ON.)",
+      " on both the pre- and post-course quiz. It lets us pair your two quizzes without collecting your name.",
     ]),
     el("label", { class: "code-label", for: "matching-code" }, "My code"),
     el("input", {
@@ -48,8 +48,9 @@
       autocomplete: "off",
       autocapitalize: "characters",
       spellcheck: "false",
-      placeholder: "e.g. NA07ON",
+      placeholder: "e.g. VL-7XK4",
       required: "required",
+      value: linkedCode,
     }),
     el("p", { class: "field-error", id: "code-error", "aria-live": "polite" }, ""),
   ]);
@@ -154,7 +155,7 @@
 
     const code = normalizeCode(form.matchingCode.value);
     if (!code || code.length < 4) {
-      showError("code-error", "Please enter your matching code (about 6 characters).");
+      showError("code-error", "Please enter the workshop code from your email (e.g. VL-7XK4).");
       form.matchingCode.focus();
       return;
     }
@@ -223,10 +224,10 @@
         el("p", {}, [
           "Your results are ",
           el("strong", {}, "locked on purpose"),
-          ". They'll be revealed at the end of the day, once you complete the post-course quiz using the same matching code — that's how we show you what changed.",
+          ". They'll be revealed at the end of the day, once you complete the post-course quiz using the same code — that's how we show you what changed.",
         ]),
-        el("div", { class: "code-echo" }, [el("span", { class: "muted" }, "Your matching code"), el("strong", {}, data.code || "")]),
-        el("p", { class: "muted small" }, "Keep this code somewhere you'll remember. Enjoy the workshop!"),
+        el("div", { class: "code-echo" }, [el("span", { class: "muted" }, "Your workshop code"), el("strong", {}, data.code || "")]),
+        el("p", { class: "muted small" }, "Use the same email link (or code) this afternoon. Enjoy the workshop!"),
       ]));
       return;
     }
@@ -273,7 +274,7 @@
     } else {
       // No matching pre found — show post score only, explain.
       card.appendChild(el("div", { class: "score-grid" }, [scoreTile("Post-course", data.post.score, 10)]));
-      card.appendChild(el("p", { class: "muted" }, "We couldn't find a pre-course quiz saved under this matching code, so we can't show a before/after comparison. That's usually because a different code was used this morning. Your facilitator can help pair them up."));
+      card.appendChild(el("p", { class: "muted" }, "We couldn't find a pre-course quiz saved under this code, so we can't show a before/after comparison. That's usually because a different code was used this morning. Your facilitator can help pair them up."));
     }
 
     card.appendChild(el("p", { class: "muted small" }, "Thank you for completing the workshop and sharing your feedback."));
@@ -289,8 +290,9 @@
   }
 
   // ---- Helpers ----------------------------------------------------------
+  // Must mirror the server: hyphen/spacing-insensitive, uppercase.
   function normalizeCode(v) {
-    return (v || "").toUpperCase().replace(/\s+/g, "").trim();
+    return (v || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   }
   function numOrNull(v) {
     return v ? Number(v) : null;

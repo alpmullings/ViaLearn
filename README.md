@@ -14,9 +14,12 @@ until the post-course quiz is completed, then their before/after is revealed.
   CSS/JS in `assets/`.
 - **Scoring and storage run server-side** in Netlify Functions (`netlify/functions/`)
   so the answer key never reaches the browser and the pre-course score can't be seen early.
-- Responses are stored in **Netlify Blobs**, keyed by each participant's private
-  **matching code** (last 2 letters of mother's first name + day of birth + last 2 letters
-  of first street) — no names collected.
+- Responses are stored in **Netlify Blobs**, keyed by a **facilitator-issued workshop
+  code** (e.g. `VL-7XK4`) — no names collected. Codes are generated on the facilitator
+  page and only issued codes are accepted by the quiz.
+- Each participant is emailed a personal link (`https://site/?code=VL-7XK4`) that
+  pre-fills their code on both quizzes; the code↔email mapping lives only in the
+  facilitator's outbox, so stored responses stay anonymous.
 
 | Route | Purpose |
 |-------|---------|
@@ -36,11 +39,15 @@ until the post-course quiz is completed, then their before/after is revealed.
 
 That's it. The pre/post pages need no configuration.
 
-### Facilitator report
+### Facilitator page
 
-Visit `/facilitator.html`, enter your `FACILITATOR_KEY`, and you'll see mean pre score,
-mean post score, average paired gain, the mean confidence shift per statement, and the
-Section 3 feedback summary.
+Visit `/facilitator.html` and enter your `FACILITATOR_KEY` to:
+
+- **Generate workshop codes** (one per participant) and copy a ready-to-email list of
+  code + personal link pairs.
+- **Track completion** — which codes have taken the pre and post quiz.
+- **Load the report** — mean pre score, mean post score, average paired gain, the mean
+  confidence shift per statement, and the Section 3 feedback summary.
 
 ### Local preview
 

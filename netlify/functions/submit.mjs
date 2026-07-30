@@ -32,8 +32,10 @@ function score(answers) {
   return s;
 }
 
+// Codes are issued by the facilitator (see codes.mjs) and stored without the
+// hyphen, so VL-7XK4, vl 7xk4, and VL7XK4 all normalize to the same key.
 function normalizeCode(v) {
-  return String(v || "").toUpperCase().replace(/\s+/g, "").trim();
+  return String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
 function cleanConfidence(obj) {
@@ -58,7 +60,13 @@ export default async (req) => {
   const mode = payload.mode === "post" ? "post" : payload.mode === "pre" ? "pre" : null;
   const code = normalizeCode(payload.code);
   if (!mode) return json(400, { error: "Missing quiz mode." });
-  if (code.length < 4) return json(400, { error: "Please enter a valid matching code." });
+  if (code.length < 4) return json(400, { error: "Please enter your workshop code." });
+
+  // Only facilitator-issued codes are accepted.
+  const issued = await getStore("issued-codes").get(code, { type: "json" });
+  if (!issued) {
+    return json(403, { error: "That code isn't recognized. Please use the link (or code) from your workshop email, or ask your facilitator." });
+  }
 
   // Validate answers are all present and are known option letters.
   const answers = {};

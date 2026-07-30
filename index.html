@@ -28,8 +28,9 @@
     </section>
 
     <div class="callout">
-      <p style="margin:0"><strong>Before you start:</strong> you'll use a private matching code so we
-      can pair your two quizzes without collecting your name. Your pre-course results stay hidden
+      <p style="margin:0"><strong>Before you start:</strong> your workshop email contains your
+      personal code (like VL-7XK4) — opening this page from that email fills it in for you. The code
+      lets us pair your two quizzes without collecting your name. Your pre-course results stay hidden
       until you finish the post-course quiz this afternoon — that's when your before/after is revealed.</p>
     </div>
 
@@ -58,6 +59,18 @@
       <p>© <span id="year"></span> ViaVeri · ViaLearn workshop tools</p>
     </div>
   </footer>
-  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    // If the emailed link carried a code (/?code=VL-7XK4), pass it through to
+    // both quiz pages so the field arrives pre-filled.
+    const code = new URLSearchParams(location.search).get("code");
+    if (code) {
+      document.querySelectorAll('.choice-cards a').forEach((a) => {
+        const url = new URL(a.getAttribute("href"), location.origin);
+        url.searchParams.set("code", code);
+        a.setAttribute("href", url.pathname + url.search);
+      });
+    }
+  </script>
 </body>
 </html>
