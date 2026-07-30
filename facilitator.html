@@ -45,6 +45,16 @@
         <button id="gen" class="btn btn-primary">Generate codes</button>
         <button id="list-codes" class="btn btn-outline">Show issued codes</button>
       </div>
+      <details style="margin-top:16px">
+        <summary style="cursor:pointer;font-weight:600">Already have codes? Import your own list</summary>
+        <p class="muted small" style="margin:10px 0 6px">One code per line (hyphens and case don't
+          matter — AA-2SP6, aa2sp6, and AA 2SP6 are the same code). Imported codes become valid
+          immediately.</p>
+        <textarea id="import-text" class="text-input" rows="6" placeholder="AA-2SP6&#10;AS-6WM8&#10;…"></textarea>
+        <div class="submit-row" style="margin-top:10px">
+          <button id="import" class="btn btn-outline">Import codes</button>
+        </div>
+      </details>
       <p class="field-error" id="codes-err"></p>
       <div id="codes-out"></div>
     </section>
@@ -170,10 +180,10 @@
 
     const participantLink = (code) => `${location.origin}/?code=${encodeURIComponent(code)}`;
 
-    function renderNewCodes(created) {
+    function renderNewCodes(created, verb = "generated") {
       const lines = created.map((c) => `${c}\t${participantLink(c)}`).join("\n");
       codesOut.innerHTML = `
-        <p><strong>${created.length} new code${created.length === 1 ? "" : "s"} generated.</strong>
+        <p><strong>${created.length} code${created.length === 1 ? "" : "s"} ${verb}.</strong>
           Copy the list below — one code + link per line, ready to paste next to each email address.</p>
         <textarea class="text-input" rows="${Math.min(created.length + 1, 12)}" readonly id="codes-text">${escapeHtml(lines)}</textarea>
         <div class="submit-row" style="margin-top:10px"><button class="btn btn-outline" id="copy-codes">Copy to clipboard</button></div>`;
@@ -199,8 +209,32 @@
           <tbody>${rows}</tbody></table></div>`;
     }
 
+    async function importCodes() {
+      const key = requireKey();
+      if (!key) return;
+      const lines = document.getElementById("import-text").value
+        .split(/\r?\n/)
+        .map((l) => l.trim().split(/[\s,;]+/)[0])
+        .filter(Boolean);
+      if (!lines.length) { codesErr.textContent = "Paste at least one code first."; return; }
+      try {
+        const res = await fetch("/.netlify/functions/codes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-facilitator-key": key },
+          body: JSON.stringify({ codes: lines }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Could not import codes.");
+        renderNewCodes(data.imported, "imported");
+        if (data.skipped?.length) {
+          codesErr.textContent = `Skipped ${data.skipped.length} invalid or duplicate line(s): ${data.skipped.join(", ")}`;
+        }
+      } catch (e) { codesErr.textContent = e.message; }
+    }
+
     document.getElementById("gen").addEventListener("click", generateCodes);
     document.getElementById("list-codes").addEventListener("click", listCodes);
+    document.getElementById("import").addEventListener("click", importCodes);
   </script>
 </body>
 </html>

@@ -3,6 +3,8 @@
  * Blobs, and submit.mjs refuses any submission whose code wasn't issued.
  *
  * POST { count } — generate that many new codes (1–200 per call).
+ * POST { codes } — import a caller-supplied list (codes already prepared or
+ *                  emailed out); invalid/duplicate entries are skipped.
  * GET          — list all issued codes with pre/post completion status.
  *
  * Both require FACILITATOR_KEY (x-facilitator-key header or ?key=).
@@ -28,7 +30,9 @@ function generateCode() {
   return "VL" + suffix;
 }
 
-const display = (code) => code.replace(/^VL/, "VL-");
+// 6-char keys render as XX-XXXX (covers generated VL-XXXX and typical
+// imported codes); anything else renders as stored.
+const display = (code) => (code.length === 6 ? code.slice(0, 2) + "-" + code.slice(2) : code);
 
 export default async (req) => {
   const expected = process.env.FACILITATOR_KEY;
@@ -42,12 +46,35 @@ export default async (req) => {
   const codes = getStore("issued-codes");
 
   if (req.method === "POST") {
-    let count = 0;
+    let body;
     try {
-      count = Number((await req.json()).count);
+      body = await req.json();
     } catch {
       return json(400, { error: "Invalid request body." });
     }
+
+    // Import mode: caller supplies the exact codes to make valid. Stored
+    // normalized (uppercase, alphanumeric only) so hyphens/case never matter.
+    if (Array.isArray(body.codes)) {
+      if (body.codes.length > 500) return json(400, { error: "At most 500 codes per import." });
+      const imported = [];
+      const skipped = [];
+      const seen = new Set();
+      for (const raw of body.codes) {
+        const key = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (key.length < 4 || key.length > 12 || seen.has(key)) {
+          skipped.push(String(raw));
+          continue;
+        }
+        seen.add(key);
+        await codes.setJSON(key, { issuedAt: new Date().toISOString(), imported: true });
+        imported.push(display(key));
+      }
+      if (!imported.length) return json(400, { error: "No valid codes to import (4–12 letters/digits each)." });
+      return json(200, { ok: true, imported, skipped });
+    }
+
+    const count = Number(body.count);
     if (!Number.isInteger(count) || count < 1 || count > 200) {
       return json(400, { error: "Count must be between 1 and 200." });
     }
