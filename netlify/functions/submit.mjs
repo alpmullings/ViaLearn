@@ -62,8 +62,10 @@ export default async (req) => {
   if (!mode) return json(400, { error: "Missing quiz mode." });
   if (code.length < 4) return json(400, { error: "Please enter your workshop code." });
 
-  // Only facilitator-issued codes are accepted.
-  const issued = await getStore("issued-codes").get(code, { type: "json" });
+  // Only facilitator-issued codes are accepted. Strong consistency so a code
+  // imported moments ago is recognized immediately.
+  const issued = await getStore({ name: "issued-codes", consistency: "strong" })
+    .get(code, { type: "json" });
   if (!issued) {
     return json(403, { error: "That code isn't recognized. Please use the link (or code) from your workshop email, or ask your facilitator." });
   }

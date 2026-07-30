@@ -43,7 +43,9 @@ export default async (req) => {
   const provided = req.headers.get("x-facilitator-key") || url.searchParams.get("key") || "";
   if (provided !== expected) return json(401, { error: "Unauthorized." });
 
-  const codes = getStore("issued-codes");
+  // Strong consistency: an imported code must be immediately valid for the
+  // quiz, not "valid within a minute or so" (the Blobs default is eventual).
+  const codes = getStore({ name: "issued-codes", consistency: "strong" });
 
   if (req.method === "POST") {
     let body;
@@ -92,6 +94,22 @@ export default async (req) => {
   }
 
   if (req.method === "GET") {
+    // Diagnostic: ?check=SOME-CODE reports whether that exact code is issued,
+    // resolving "the quiz says my code isn't recognized" without guesswork.
+    const check = url.searchParams.get("check");
+    if (check) {
+      const key = String(check).toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const record = await codes.get(key, { type: "json" });
+      const total = (await codes.list()).blobs.length;
+      return json(200, {
+        input: check,
+        normalizedTo: key,
+        issued: Boolean(record),
+        issuedAt: record?.issuedAt ?? null,
+        totalIssued: total,
+      });
+    }
+
     const responses = getStore("quiz-responses");
     const responseKeys = new Set((await responses.list()).blobs.map((b) => b.key));
     const list = (await codes.list()).blobs

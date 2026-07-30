@@ -55,6 +55,16 @@
           <button id="import" class="btn btn-outline">Import codes</button>
         </div>
       </details>
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer;font-weight:600">A participant says their code isn't recognized</summary>
+        <p class="muted small" style="margin:10px 0 6px">Check whether a specific code has actually
+          been issued on this site.</p>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <input id="check-code" class="text-input" style="width:200px" placeholder="e.g. AA-2SP6" autocomplete="off" />
+          <button id="check" class="btn btn-outline">Check code</button>
+        </div>
+        <div id="check-out"></div>
+      </details>
       <p class="field-error" id="codes-err"></p>
       <div id="codes-out"></div>
     </section>
@@ -234,7 +244,33 @@
 
     document.getElementById("gen").addEventListener("click", generateCodes);
     document.getElementById("list-codes").addEventListener("click", listCodes);
+    async function checkCode() {
+      const key = requireKey();
+      if (!key) return;
+      const out = document.getElementById("check-out");
+      const code = document.getElementById("check-code").value.trim();
+      out.innerHTML = "";
+      if (!code) { codesErr.textContent = "Enter a code to check."; return; }
+      try {
+        const res = await fetch(`/.netlify/functions/codes?check=${encodeURIComponent(code)}`, {
+          headers: { "x-facilitator-key": key },
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error || "Could not check code.");
+        out.innerHTML = d.issued
+          ? `<div class="callout" style="margin-top:12px"><p style="margin:0"><strong>${escapeHtml(d.input)}</strong>
+               is issued and valid (stored as <code>${escapeHtml(d.normalizedTo)}</code>).
+               ${d.totalIssued} code(s) issued on this site in total.</p></div>`
+          : `<div class="warn-box" style="margin-top:12px"><p style="margin:0"><strong>${escapeHtml(d.input)}</strong>
+               is <strong>not issued</strong> on this site, so the quiz will reject it.
+               ${d.totalIssued === 0
+                 ? "In fact <strong>no codes have been issued at all</strong> — import or generate your list above first."
+                 : `${d.totalIssued} other code(s) are issued — use “Show issued codes” to see them.`}</p></div>`;
+      } catch (e) { codesErr.textContent = e.message; }
+    }
+
     document.getElementById("import").addEventListener("click", importCodes);
+    document.getElementById("check").addEventListener("click", checkCode);
   </script>
 </body>
 </html>
