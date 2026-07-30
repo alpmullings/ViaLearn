@@ -294,6 +294,10 @@
         ]),
         el("div", { class: "code-echo" }, [el("span", { class: "muted" }, "Your workshop code"), el("strong", {}, data.code || "")]),
         el("p", { class: "muted small" }, "Use the same email link (or code) this afternoon. Enjoy the workshop!"),
+        el("div", { style: "margin-top:14px" }, [
+          el("a", { class: "btn btn-outline", href: "/post?code=" + encodeURIComponent(data.code || "") },
+            "This afternoon: take the post-course quiz →"),
+        ]),
       ]));
       return;
     }
